@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelance Proposal Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for longer content */
+            min-height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .section-title {
+            color: #1f2937; /* Darker gray for titles */
+            font-weight: 700; /* Bold */
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e5e7eb; /* Light border */
+            padding-bottom: 0.75rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500; /* Medium weight */
+            color: #374151; /* Medium gray */
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db; /* Light border */
+            border-radius: 0.75rem; /* Rounded corners */
+            font-size: 1rem;
+            color: #1f2937;
+            background-color: #f9fafb; /* Slightly off-white background */
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #6366f1; /* Purple focus border */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Light purple shadow */
+        }
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-decoration: none; /* For share link */
+        }
+        .btn-primary {
+            background-color: #6366f1; /* Purple */
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5; /* Darker purple */
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background-color: #e0e7ff; /* Light purple */
+            color: #4f46e5; /* Darker purple text */
+        }
+        .btn-secondary:hover {
+            background-color: #c7d2fe; /* Even lighter purple */
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.08);
+        }
+        .message-box {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #10b981; /* Green for success */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            .grid-cols-2 {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+            .btn {
+                width: 100%; /* Full width buttons on small screens */
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container">
+        <h1 class="text-4xl text-center font-extrabold text-gray-900 mb-6">💼 Freelance Proposal Generator</h1>
+
+        <!-- Questionnaire Section -->
+        <div class="questionnaire-section">
+            <h2 class="text-2xl section-title">💡 Project Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="clientName">1. Client Name:</label>
+                    <input type="text" id="clientName" placeholder="e.g., Acme Corp." class="w-full">
+                </div>
+                <div>
+                    <label for="projectName">2. Project Name/Title:</label>
+                    <input type="text" id="projectName" placeholder="e.g., E-commerce Website Redesign" class="w-full">
+                </div>
+                <div>
+                    <label for="projectType">3. Project Type:</label>
+                    <select id="projectType" class="w-full">
+                        <option value="webDevelopment">Web Development</option>
+                        <option value="mobileApp">Mobile App Development</option>
+                        <option value="graphicDesign">Graphic Design</option>
+                        <option value="contentWriting">Content Writing</option>
+                        <option value="consulting">Consulting</option>
+                        <option value="custom">Other (Custom)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="timeline">4. Estimated Timeline (e.g., weeks, months):</label>
+                    <input type="text" id="timeline" placeholder="e.g., 6-8 weeks" class="w-full">
+                </div>
+            </div>
+            <div class="mt-6">
+                <label for="projectScope">5. Brief Project Scope/Key Deliverables:</label>
+                <textarea id="projectScope" placeholder="e.g., Design and develop a responsive website, integrate payment gateway, provide content management system."></textarea>
+            </div>
+            <button id="generateBtn" class="btn btn-primary mt-8 w-full">Generate Proposal</button>
+        </div>
+
+        <!-- Proposal Output Section -->
+        <div class="proposal-output-section hidden" id="proposalSection">
+            <h2 class="text-2xl section-title">📄 Your Generated Proposal</h2>
+            <textarea id="proposalText" readonly class="w-full"></textarea>
+            <div class="flex flex-col md:flex-row gap-4 mt-6">
+                <button id="copyBtn" class="btn btn-secondary flex-1">Copy Proposal</button>
+                <button id="downloadPdfBtn" class="btn btn-secondary flex-1">Download as PDF</button>
+                <button id="shareLinkBtn" class="btn btn-secondary flex-1">Share via Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        // Ensure jsPDF is available globally if using UMD build
+        const { jsPDF } = window.jspdf;
+
+        // Get DOM elements
+        const clientNameInput = document.getElementById('clientName');
+        const projectNameInput = document.getElementById('projectName');
+        const projectTypeSelect = document.getElementById('projectType');
+        const timelineInput = document.getElementById('timeline');
+        const projectScopeInput = document.getElementById('projectScope');
+        const generateBtn = document.getElementById('generateBtn');
+        const proposalSection = document.getElementById('proposalSection');
+        const proposalTextarea = document.getElementById('proposalText');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        const shareLinkBtn = document.getElementById('shareLinkBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        // Proposal Templates based on project type
+        const proposalTemplates = {
+            webDevelopment: (data) => `
+Proposal for Web Development Services
+
+To: ${data.clientName}
+Project: ${data.projectName}
+Date: ${new Date().toLocaleDateString()}
+
+Dear ${data.clientName},
+
+Thank you for the opportunity to submit this proposal for the development of your new web project, "${data.projectName}". We are confident that our expertise can help you achieve your online goals.
+
+**1. Project Overview**
+This proposal outlines the scope of work for the development of a modern, responsive, and user-friendly website for ${data.clientName}. The primary objective is to create a robust online presence that effectively serves your business needs.
+
+**2. Scope of Work**
+The key deliverables for this project include:
+- ${data.projectScope || 'Detailed design and development of website pages, responsive layout for all devices, content management system integration, and basic SEO setup.'}
+- User Interface (UI) and User Experience (UX) design.
+- Front-end and Back-end development.
+- Database integration (if applicable).
+- Testing and quality assurance.
+- Deployment and launch support.
+
+**3. Estimated Timeline**
+We estimate the completion of this project to be approximately ${data.timeline || '8-10 weeks'} from the project kick-off date, assuming timely feedback and content provision from your team.
+
+**4. Investment**
+A detailed cost breakdown will be provided upon further discussion and clarification of specific features and functionalities. Our standard rates ensure high-quality delivery and ongoing support.
+
+**5. Next Steps**
+We would be delighted to schedule a follow-up meeting to discuss this proposal in more detail, answer any questions you may have, and refine the project scope to perfectly align with your vision.
+
+Thank you for your time and consideration. We look forward to the possibility of working with you.
+
+Sincerely,
+
+[Your Name/Company Name]
+[Your Contact Information]
+            `.trim(),
+
+            mobileApp: (data) => `
+Proposal for Mobile Application Development
+
+To: ${data.clientName}
+Project: ${data.projectName}
+Date: ${new Date().toLocaleDateString()}
+
+Dear ${data.clientName},
+
+We are pleased to present this proposal for the development of your mobile application, "${data.projectName}". Our team is excited about the prospect of bringing your innovative idea to life on mobile platforms.
+
+**1. Project Overview**
+This proposal details the creation of a native/hybrid mobile application for ${data.clientName}, focusing on delivering a seamless and engaging user experience. The application aims to ${data.projectScope || 'provide a new way for users to interact with your services, enhance customer engagement, and expand your digital reach.'}
+
+**2. Scope of Work**
+The key deliverables for this project include:
+- ${data.projectScope || 'Conceptualization and wireframing, UI/UX design for iOS and Android, front-end and back-end development, API integration, and comprehensive testing.'}
+- User flow and feature definition.
+- Cross-platform or native development.
+- Integration with existing systems (if required).
+- Performance optimization and security measures.
+- App store submission guidance.
+
+**3. Estimated Timeline**
+The estimated timeline for the development and launch of the "${data.projectName}" mobile application is approximately ${data.timeline || '12-16 weeks'}, subject to feature complexity and client feedback cycles.
+
+**4. Investment**
+A detailed budget will be provided after a thorough understanding of all functional and non-functional requirements. Our pricing reflects our commitment to delivering high-quality, scalable mobile solutions.
+
+**5. Next Steps**
+We are available to schedule a meeting to discuss this proposal further, elaborate on our development process, and answer any questions you may have.
+
+Thank you for considering our services. We look forward to building a successful mobile application with you.
+
+Sincerely,
+
+[Your Name/Company Name]
+[Your Contact Information]
+            `.trim(),
+
+            graphicDesign: (data) => `
+Proposal for Graphic Design Services
+
+To: ${data.clientName}
+Project: ${data.projectName}
+Date: ${new Date().toLocaleDateString()}
+
+Dear ${data.clientName},
+
+Thank you for reaching out regarding your graphic design needs for "${data.projectName}". We are enthusiastic about the opportunity to enhance your brand's visual identity.
+
+**1. Project Overview**
+This proposal outlines our approach to providing professional graphic design services for ${data.clientName}. Our goal is to create compelling visuals that communicate your message effectively and resonate with your target audience.
+
+**2. Scope of Work**
+The key deliverables for this project include:
+- ${data.projectScope || 'Logo design, brand style guide creation, marketing collateral (brochures, flyers), social media graphics, and website visual assets.'}
+- Concept development and mood boards.
+- Multiple design iterations and revisions.
+- Delivery of final assets in various formats (print, web).
+- Brand consistency across all design elements.
+
+**3. Estimated Timeline**
+The estimated timeline for the completion of the graphic design work for "${data.projectName}" is approximately ${data.timeline || '3-5 weeks'}, depending on the complexity and number of revisions.
+
+**4. Investment**
+Our pricing for graphic design services is tailored to the specific requirements of each project. A detailed quote will be provided once the full scope of work is defined.
+
+**5. Next Steps**
+We would appreciate the opportunity to discuss your vision in more detail and present our portfolio of relevant work. Please feel free to contact us to schedule a meeting.
+
+Thank you for your consideration. We are eager to help you make a lasting visual impression.
+
+Sincerely,
+
+[Your Name/Company Name]
+[Your Contact Information]
+            `.trim(),
+
+            contentWriting: (data) => `
+Proposal for Content Writing Services
+
+To: ${data.clientName}
+Project: ${data.projectName}
+Date: ${new Date().toLocaleDateString()}
+
+Dear ${data.clientName},
+
+We are pleased to submit this proposal for content writing services for your project, "${data.projectName}". We are committed to crafting engaging and effective content that meets your objectives.
+
+**1. Project Overview**
+This proposal addresses the need for high-quality, compelling content for ${data.clientName}. Our aim is to deliver content that informs, persuades, and connects with your audience, aligning with your brand voice and marketing goals.
+
+**2. Scope of Work**
+The key deliverables for this project include:
+- ${data.projectScope || 'Blog posts, website copy, articles, press releases, social media content, and email newsletters.'}
+- Thorough research on industry topics and keywords.
+- SEO optimization for improved visibility.
+- Multiple drafts and revisions to ensure satisfaction.
+- Proofreading and editing for accuracy and clarity.
+
+**3. Estimated Timeline**
+The estimated timeline for content creation for "${data.projectName}" is approximately ${data.timeline || '2-4 weeks'} per batch of content, depending on the volume and complexity.
+
+**4. Investment**
+Our rates for content writing are based on the type, length, and research required for each piece. A customized quote will be provided upon review of your specific content needs.
+
+**5. Next Steps**
+We would welcome a discussion to understand your content strategy in depth and how our writing services can best support your project.
+
+Thank you for the opportunity to propose our services. We look forward to helping you tell your story.
+
+Sincerely,
+
+[Your Name/Company Name]
+[Your Contact Information]
+            `.trim(),
+
+            consulting: (data) => `
+Proposal for Consulting Services
+
+To: ${data.clientName}
+Project: ${data.projectName}
+Date: ${new Date().toLocaleDateString()}
+
+Dear ${data.clientName},
+
+Thank you for considering our consulting services for your project, "${data.projectName}". We are confident that our strategic insights can help you navigate challenges and achieve your business objectives.
+
+**1. Project Overview**
+This proposal outlines our approach to providing expert consulting services to ${data.clientName}. Our goal is to offer actionable strategies and solutions to address your specific needs related to ${data.projectScope || 'business growth, operational efficiency, market entry, or digital transformation.'}
+
+**2. Scope of Work**
+The key deliverables for this project include:
+- ${data.projectScope || 'Initial assessment and discovery, strategic planning workshops, detailed recommendations report, implementation roadmap, and ongoing advisory support.'}
+- Data analysis and market research.
+- Stakeholder interviews and workshops.
+- Risk assessment and mitigation strategies.
+- Performance monitoring and evaluation framework.
+
+**3. Estimated Timeline**
+The estimated duration for this consulting engagement is approximately ${data.timeline || '4-6 weeks'}, which includes discovery, analysis, and strategy development phases.
+
+**4. Investment**
+Our consulting fees are structured to reflect the value and expertise we bring to your organization. A detailed proposal with pricing will be provided after an initial consultation to define the scope precisely.
+
+**5. Next Steps**
+We invite you to schedule an initial consultation with us to discuss your challenges and goals in more detail. This will allow us to tailor our approach to your unique situation.
+
+Thank you for your time and consideration. We look forward to partnering with you for success.
+
+Sincerely,
+
+[Your Name/Company Name]
+[Your Contact Information]
+            `.trim(),
+
+            custom: (data) => `
+Proposal for Custom Project Services
+
+To: ${data.clientName}
+Project: ${data.projectName}
+Date: ${new Date().toLocaleDateString()}
+
+Dear ${data.clientName},
+
+Thank you for the opportunity to submit this proposal for your custom project, "${data.projectName}". We are excited to collaborate with you to bring your unique vision to fruition.
+
+**1. Project Overview**
+This proposal outlines the scope of work for the custom project requested by ${data.clientName}. Our aim is to provide tailored solutions that perfectly match your specific requirements and deliver exceptional results.
+
+**2. Scope of Work**
+The key deliverables for this project include:
+- ${data.projectScope || 'Detailed requirements gathering, custom solution design, development and implementation, rigorous testing, and post-launch support.'}
+- Collaborative planning and regular progress updates.
+- Adaptable approach to integrate your feedback.
+- Focus on delivering a high-quality, bespoke solution.
+
+**3. Estimated Timeline**
+The estimated timeline for the completion of this custom project is approximately ${data.timeline || 'variable, depending on complexity and specific deliverables'}, to be finalized upon detailed scope definition.
+
+**4. Investment**
+Given the custom nature of this project, a detailed investment breakdown will be provided after a comprehensive understanding of all requirements. Our pricing reflects the bespoke nature and specialized expertise involved.
+
+**5. Next Steps**
+We would greatly appreciate the chance to discuss your project in further detail, clarify any aspects, and ensure our proposed solution aligns perfectly with your expectations.
+
+Thank you for your time and consideration. We are eager to embark on this unique project with you.
+
+Sincerely,
+
+[Your Name/Company Name]
+[Your Contact Information]
+            `.trim()
+        };
+
+        // Function to show a temporary message
+        function showMessage(message, duration = 3000) {
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, duration);
+        }
+
+        // Function to collect all input data
+        function collectData() {
+            return {
+                clientName: clientNameInput.value.trim(),
+                projectName: projectNameInput.value.trim(),
+                projectType: projectTypeSelect.value,
+                timeline: timelineInput.value.trim(),
+                projectScope: projectScopeInput.value.trim()
+            };
+        }
+
+        // Function to generate the proposal
+        function generateProposal() {
+            const data = collectData();
+            const templateFunction = proposalTemplates[data.projectType] || proposalTemplates.custom; // Fallback to custom
+            const proposalContent = templateFunction(data);
+            proposalTextarea.value = proposalContent;
+            proposalSection.classList.remove('hidden');
+        }
+
+        // Event listener for Generate Proposal button
+        generateBtn.addEventListener('click', generateProposal);
+
+        // Event listener for Copy Proposal button
+        copyBtn.addEventListener('click', () => {
+            proposalTextarea.select();
+            document.execCommand('copy'); // Fallback for navigator.clipboard.writeText
+            showMessage('Proposal copied to clipboard!');
+        });
+
+        // Event listener for Download as PDF button
+        downloadPdfBtn.addEventListener('click', () => {
+            const doc = new jsPDF();
+            const proposalContent = proposalTextarea.value;
+
+            // Split text into lines to fit page width
+            const lines = doc.splitTextToSize(proposalContent, 180); // 180mm width
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(lines, 10, 10); // Start at 10mm, 10mm
+
+            doc.save('Freelance_Proposal.pdf');
+            showMessage('Proposal downloaded as PDF!');
+        });
+
+        // Event listener for Share via Link button
+        shareLinkBtn.addEventListener('click', () => {
+            const data = collectData();
+            const params = new URLSearchParams();
+            for (const key in data) {
+                if (data[key]) {
+                    params.append(key, data[key]);
+                }
+            }
+            const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+            // Copy to clipboard
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = shareUrl;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showMessage('Share link copied to clipboard!');
+        });
+
+        // Function to load data from URL parameters on page load
+        function loadFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.size > 0) {
+                clientNameInput.value = params.get('clientName') || '';
+                projectNameInput.value = params.get('projectName') || '';
+                projectTypeSelect.value = params.get('projectType') || 'webDevelopment';
+                timelineInput.value = params.get('timeline') || '';
+                projectScopeInput.value = params.get('projectScope') || '';
+
+                // Generate proposal immediately if data is loaded from URL
+                generateProposal();
+            }
+        }
+
+        // Call loadFromUrl on page load
+        window.addEventListener('load', loadFromUrl);
+    </script>
+</body>
+</html>
